@@ -12,44 +12,46 @@ else:
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist
+from ecosun_msgs.msg import Rotate, Mode
 
 running = True
 msg = """
 Control manual de EcoSun.
 
 Utiliza A y D para rotar el panel solar.
+S para modo de salvaguarda.
+W para volver a operación normal.
 """
 
 
-class ManualMover(Node):
+class Controller(Node):
     def __init__(self):
         super().__init__('manual_mover')
-        self.publisher = self.create_publisher(Twist, 'topic', 10)
+        self.rotation_pub = self.create_publisher(Rotate, 'rotate_dir', 10)
+        self.mode_pub = self.create_publisher(Mode, 'set_mode', 10)
         self.listener = Thread(target=keyboardListener, args=[self])
         self.listener.start()
 
     def rotate(self, x):
-        twist = newTwist()
-        twist.angular.x = x
-        self.publisher.publish(twist)
+        r = Rotate()
+        r.dir = x
+        self.rotation_pub.publish(r)
 
     def rotate_left(self):
-        self.rotate(1.0)
+        self.rotate(1)
 
     def rotate_right(self):
-        self.rotate(-1.0)
+        self.rotate(-1)
 
+    def goto_safeguard(self):
+        mode = Mode()
+        mode.mode = 'safeguard'
+        self.mode_pub.publish(mode)
 
-def newTwist():
-    twist = Twist()
-    twist.linear.x = 0.0
-    twist.linear.y = 0.0
-    twist.linear.z = 0.0
-    twist.angular.x = 0.0
-    twist.angular.y = 0.0
-    twist.angular.z = 0.0
-    return twist
+    def normal_operation(self):
+        mode = Mode()
+        mode.mode = 'normal'
+        self.mode_pub.publish(mode)
 
 
 def getKey(settings):
@@ -84,30 +86,32 @@ def keyboardListener(node):
     print('Running listener...')
     while running:
         key = getKey(settings)
-        twist = newTwist()
         if key == 'a':
-            twist.angular.x = 1.0
             print('Rotando <-')
+            node.rotate_left()
         elif key == 'd':
-            twist.angular.x = -1.0
             print('Rotando ->')
+            node.rotate_right()
+        elif key == 's':
+            print('Yendo a safeguard')
+            node.goto_safeguard()
+        elif key == 'w':
+            print('Yendo a operación normal')
+            node.normal_operation()
         else:
             if key == '\x03':
                 running = False
-                node.destroy_publisher(node.publisher)
             continue
-
-        node.publisher.publish(twist)
 
 
 def main(args=None):
     rclpy.init(args=args)
 
     print(msg)
-    manual_mover = ManualMover()
-    rclpy.spin(manual_mover)
+    controller = Controller()
+    rclpy.spin(controller)
 
-    manual_mover.destroy_node()
+    controller.destroy_node()
     rclpy.shutdown()
 
 

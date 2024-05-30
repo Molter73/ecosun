@@ -20,8 +20,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'mover = ecosun.manual_mover:main',
+            'controller = ecosun.controller:main',
             'listen = ecosun.test_listener:main',
+            'arduino = ecosun.arduino:main',
         ],
     },
 )
