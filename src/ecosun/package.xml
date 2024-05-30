@@ -2,9 +2,11 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ecosun</name>
-  <version>0.0.0</version>
-  <description>Ecosun</description>
+  <version>1.0.0</version>
+  <description>Ecosun Tracker</description>
   <maintainer email="mauromoltrasio@gmail.com">Mauro E. Moltrasio</maintainer>
+  <maintainer email="bmsjale@gmail.com">Alejandro Delgado Martínez</maintainer>
+  <maintainer email="alzaro206rc@gmail.com">Álzaro Álvarez Pérez</maintainer>
   <license>Apache-2.0</license>
 
   <exec_depend>rclpy</exec_depend>

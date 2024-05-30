@@ -2,10 +2,12 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ecosun_msgs</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="root@todo.todo">root</maintainer>
-  <license>TODO: License declaration</license>
+  <version>1.0.0</version>
+  <description>Mensajes para EcoSun Tracker</description>
+  <maintainer email="mauromoltrasio@gmail.com">Mauro E. Moltrasio</maintainer>
+  <maintainer email="bmsjale@gmail.com">Alejandro Delgado Martínez</maintainer>
+  <maintainer email="alzaro206rc@gmail.com">Álzaro Álvarez Pérez</maintainer>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <build_depend>rosidl_default_generators</build_depend>
