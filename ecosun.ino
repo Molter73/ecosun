@@ -3,6 +3,11 @@
 Servo myservo;
 int pos = 90;
 
+static const int RIGHT_BUTTON = 2;
+static const int LEFT_BUTTON = 3;
+static const int NORMAL_BUTTON = 4;
+static const int SAFEGUARD_BUTTON = 5;
+
 static const int SAFEGUARD_POSITION = 10;
 static const int SENSITIVITY = 100;
 int leftSensor = A0;
@@ -87,38 +92,72 @@ void handleServo() {
     }
 }
 
+void manualMove(incoming_t incoming) {
+  if (status == SAFEGUARD) {
+    // Ignoramos operación manual en safeguard
+    return;
+  }
+
+  if (status != MANUAL) {
+    status = MANUAL;
+    sendMode(GOING_MANUAL);
+  }
+  adjustPosition(incoming);
+}
+
+void setNormalMode() {
+  status = NORMAL;
+  sendMode(GOING_NORMAL);
+
+  // Devolvemos el servo a la posición original en
+  // caso de haber estado en safeguard
+  myservo.write(pos);
+  sendPosition(pos);
+}
+
+void setSafeguardMode() {
+  status = SAFEGUARD;
+  sendMode(GOING_SAFEGUARD);
+  sendPosition(SAFEGUARD_POSITION);
+}
+
 void handleRos() {
   while (Serial.available() > 0) {
     incoming_t incoming = Serial.read();
     if (incoming == MOVE_LEFT || incoming == MOVE_RIGHT) {
-      if (status == SAFEGUARD) {
-        // Ignoramos operación manual en safeguard
-        return;
-      }
-
-      if (status != MANUAL) {
-        status = MANUAL;
-        sendMode(GOING_MANUAL);
-      }
-      adjustPosition(incoming);
+      manualMove(incoming);
     } else if (incoming == NORMAL_OPERATION && status != NORMAL) {
-      status = NORMAL;
-      sendMode(GOING_NORMAL);
-
-      // Devolvemos el servo a la posición original en
-      // caso de haber estado en safeguard
-      myservo.write(pos);
+      setNormalMode();
     } else if (incoming == GOTO_SAFEGUARD && status != SAFEGUARD) {
-      status = SAFEGUARD;
-      sendMode(GOING_SAFEGUARD);
-      sendPosition(SAFEGUARD_POSITION);
+      setSafeguardMode();
     }
+  }
+}
+
+void handleButtons() {
+  if (digitalRead(SAFEGUARD_BUTTON) == LOW) {
+    // Botón salvaguarda tiene prioridad máxima y anula el resto
+    // de botones.
+    if (status != SAFEGUARD) {
+      setSafeguardMode();
+    }
+  } else if (digitalRead(NORMAL_BUTTON) == LOW && status != NORMAL) {
+    setNormalMode();
+  } else if (digitalRead(LEFT_BUTTON) == LOW) {
+    manualMove(MOVE_LEFT);
+  } else if (digitalRead(RIGHT_BUTTON) == LOW) {
+    manualMove(MOVE_RIGHT);
   }
 }
 
 void setup()
 {
   Serial.begin(115200);
+
+  pinMode(RIGHT_BUTTON, INPUT);
+  pinMode(LEFT_BUTTON, INPUT);
+  pinMode(NORMAL_BUTTON, INPUT);
+  pinMode(SAFEGUARD_BUTTON, INPUT);
 
   myservo.attach(9);
   myservo.write(pos);
@@ -130,5 +169,6 @@ void loop()
 {
   delay(200);
   handleRos();
+  handleButtons();
   handleServo();
 }

@@ -97,7 +97,7 @@ def reader(serialPort):
 
 def main(args=None):
     rclpy.init(args=args)
-    arduinoCom = ArduinoCom(115200, '/dev/ttyACM2')
+    arduinoCom = ArduinoCom(115200, '/dev/ttyACM1')
 
     rclpy.spin(arduinoCom)
     arduinoCom.stop()
