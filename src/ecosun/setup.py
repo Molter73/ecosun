@@ -21,7 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'controller = ecosun.controller:main',
-            'listen = ecosun.test_listener:main',
+            'listen = ecosun.listener:main',
             'arduino = ecosun.arduino:main',
         ],
     },
