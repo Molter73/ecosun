@@ -3,7 +3,7 @@ from threading import Thread
 import rclpy
 from rclpy.node import Node
 
-from ecosun_msgs.msg import Rotate, Mode
+from ecosun_msgs.msg import Rotate, Mode, Position
 
 from serial import Serial
 
@@ -33,6 +33,8 @@ class ArduinoCom(Node):
             self.mode_callback,
             10,
         )
+        self.mode_pub = self.create_publisher(Mode, 'cur_mode', 10)
+        self.position_pub = self.create_publisher(Position, 'cur_position', 10)
 
         self.reader = Thread(target=reader, args=[self])
         self.reader.start()
@@ -52,6 +54,16 @@ class ArduinoCom(Node):
         elif msg.mode == 'normal':
             print('Yendo a operación normal')
             self.serialPort.write(NORMAL_OPERATION)
+
+    def publishMode(self, mode):
+        m = Mode()
+        m.mode = mode
+        self.mode_pub.publish(m)
+
+    def publishPosition(self, position):
+        p = Position()
+        p.position = int(position)
+        self.position_pub.publish(p)
 
     def setupSerial(self, baudRate, serialPortName):
         serialPort = Serial(
@@ -89,10 +101,16 @@ class ArduinoCom(Node):
         self.running = False
 
 
-def reader(serialPort):
+def reader(node):
     global running
     while running:
-        print(serialPort.readMsg())
+        msg = node.readMsg()
+        print(msg)
+        if msg.startswith('mode: '):
+            node.publishMode(msg.removeprefix('mode: ').strip())
+        elif msg.startswith('pos: '):
+            node.publishPosition(msg.removeprefix('pos: ').strip())
+
 
 
 def main(args=None):
