@@ -15,9 +15,10 @@ int rightSensor = A1;
 int sensorValue;
 
 typedef enum {
-    NORMAL = 0,
-    MANUAL = 1,
-    SAFEGUARD = 2,
+  NORMAL = 0,
+  MANUAL = 1,
+  SAFEGUARD = 2,
+  LOW_LIGHT = 3,
 } status_t;
 
 typedef enum {
@@ -31,6 +32,7 @@ typedef enum {
   GOING_NORMAL = 0,
   GOING_MANUAL = 1,
   GOING_SAFEGUARD = 2,
+  GOING_LOW_LIGHT = 3,
 } outgoing_t;
 
 status_t status = NORMAL;
@@ -42,6 +44,8 @@ void sendMode(outgoing_t o) {
     Serial.println("mode: manual");
   } else if (o == GOING_SAFEGUARD) {
     Serial.println("mode: safeguard");
+  } else if (o == GOING_LOW_LIGHT) {
+    Serial.println("mode: lowlight");
   }
 }
 
@@ -49,6 +53,15 @@ void sendPosition(int p) {
   Serial.print("pos: ");
   Serial.print(p, DEC);
   Serial.println();
+}
+
+void adjustPositionSensors(int leftRead, int rightRead) {
+  int diff = leftRead - rightRead;
+  if (diff <= SENSITIVITY && diff >= -SENSITIVITY) {
+    return;
+  }
+
+  adjustPosition(diff > 0 ? MOVE_LEFT : MOVE_RIGHT);
 }
 
 void adjustPosition(incoming_t i) {
@@ -67,23 +80,30 @@ void adjustPosition(incoming_t i) {
   sendPosition(pos);
 }
 
-int getLightDiff() {
+void handleSensors() {
+  if (status != NORMAL && status != LOW_LIGHT) {
+    return;
+  }
+
   int leftRead = analogRead(leftSensor);
   int rightRead = analogRead(rightSensor);
+  if (status == NORMAL) {
+    if (leftRead < 250 && rightRead < 250) {
+      setLowLightMode();
+      return;
+    }
 
-  return leftRead - rightRead;
+    adjustPositionSensors(leftRead, rightRead);
+  } else if (status == LOW_LIGHT) {
+    if (leftRead >= 250 || rightRead >= 250) {
+      setNormalMode();
+      return;
+    }
+  }
 }
 
 void handleServo() {
-    if (status == NORMAL) {
-      int diff = getLightDiff();
-      if (diff <= SENSITIVITY && diff >= -SENSITIVITY) {
-        return;
-      }
-
-      adjustPosition(diff < 0 ? MOVE_LEFT : MOVE_RIGHT);
-      myservo.write(pos);
-    } else if (status == MANUAL) {
+    if (status == NORMAL || status == MANUAL || status == LOW_LIGHT) {
       myservo.write(pos);
     } else if (status == SAFEGUARD) {
       myservo.write(SAFEGUARD_POSITION);
@@ -111,7 +131,7 @@ void setNormalMode() {
 
   // Devolvemos el servo a la posición original en
   // caso de haber estado en safeguard
-  myservo.write(pos);
+  // myservo.write(pos);
   sendPosition(pos);
 }
 
@@ -119,6 +139,13 @@ void setSafeguardMode() {
   status = SAFEGUARD;
   sendMode(GOING_SAFEGUARD);
   sendPosition(SAFEGUARD_POSITION);
+}
+
+void setLowLightMode() {
+  status = LOW_LIGHT;
+  sendMode(GOING_LOW_LIGHT);
+  pos = SAFEGUARD_POSITION;
+  sendPosition(pos);
 }
 
 void handleRos() {
@@ -150,8 +177,7 @@ void handleButtons() {
   }
 }
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
 
   pinMode(RIGHT_BUTTON, INPUT);
@@ -163,12 +189,14 @@ void setup()
   myservo.write(pos);
 
   Serial.println("Arduino is ready");
+  sendMode(GOING_NORMAL);
+  sendPosition(pos);
 }
 
-void loop()
-{
+void loop() {
   delay(200);
   handleRos();
   handleButtons();
+  handleSensors();
   handleServo();
 }
