@@ -5,4 +5,9 @@ ENV ROS_DOMAIN_ID=10
 WORKDIR /ecosun
 
 RUN apt-get update && \
-    apt-get install -y python3-serial
+    apt-get install -y --no-install-recommends \
+        python3-serial \
+        python3-flask && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    echo "[ -f /ecosun/install/setup.bash ] && source /ecosun/install/setup.bash" >> /root/.bashrc

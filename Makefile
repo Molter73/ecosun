@@ -12,6 +12,7 @@ deploy: build-container
 		--privileged \
 		-v $(CURDIR):/ecosun:z \
 		-v /dev:/dev \
+		-p 1337:5000 \
 		quay.io/mmoltras/ecosun:latest
 
 teardown:
