@@ -1,7 +1,7 @@
 from signal import signal, SIGINT
 from threading import Thread
 
-from flask import Flask
+from flask import Flask, jsonify
 
 import rclpy
 from rclpy.node import Node
@@ -57,7 +57,11 @@ prev_sigint_handler = signal(SIGINT, sigint_handler)
 
 @app.route('/')
 def get_status():
-    return {
+    response = jsonify({
         'mode': ecosun_listener.mode,
         'position': ecosun_listener.position,
-    }
+    })
+
+    response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return response

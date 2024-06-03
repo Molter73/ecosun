@@ -20,13 +20,14 @@ export default function Home() {
         );
         // Fallback data
         setData({
-          mode: "normal",
-          position: 100,
+          mode: "",
+          position: -1,
         });
       }
     }
 
-    fetchData();
+    const interval = setInterval(() => fetchData(), 1000)
+    return () => clearInterval(interval)
   }, []);
 
   return (
