@@ -26,7 +26,7 @@ W para volver a operación normal.
 
 class Controller(Node):
     def __init__(self):
-        super().__init__('manual_mover')
+        super().__init__('controller')
         self.rotation_pub = self.create_publisher(Rotate, 'rotate_dir', 10)
         self.mode_pub = self.create_publisher(Mode, 'set_mode', 10)
         self.listener = Thread(target=keyboardListener, args=[self])

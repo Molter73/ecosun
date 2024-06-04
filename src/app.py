@@ -11,7 +11,7 @@ from ecosun_msgs.msg import Mode, Position
 
 class EcosunListener(Node):
     def __init__(self):
-        super().__init__('minimal_subscriber')
+        super().__init__('api')
         self.mode_sub = self.create_subscription(
             Mode,
             'cur_mode',
