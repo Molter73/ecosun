@@ -15,10 +15,10 @@ int rightSensor = A1;
 int sensorValue;
 
 typedef enum {
-  NORMAL = 0,
-  MANUAL = 1,
-  SAFEGUARD = 2,
-  LOW_LIGHT = 3,
+  NORMAL = 0,    // controlado por los sensores
+  MANUAL = 1,    // controlado manualmente
+  SAFEGUARD = 2, // modo salvaguarda
+  LOW_LIGHT = 3, // como el salvaguarda, pero atiende sensores
 } status_t;
 
 typedef enum {
@@ -128,10 +128,6 @@ void manualMove(incoming_t incoming) {
 void setNormalMode() {
   status = NORMAL;
   sendMode(GOING_NORMAL);
-
-  // Devolvemos el servo a la posición original en
-  // caso de haber estado en safeguard
-  // myservo.write(pos);
   sendPosition(pos);
 }
 
